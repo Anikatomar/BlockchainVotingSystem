@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+
+# Node
+node_modules/
+
+# React
+frontend/node_modules/
+frontend/dist/
+
+# Hardhat
+blockchain/node_modules/
+blockchain/cache/
+blockchain/artifacts/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Ganache
+ganache-db/
