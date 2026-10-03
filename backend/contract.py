@@ -185,3 +185,24 @@ def add_candidate(name):
             "success": False,
             "error": str(e)
         }
+    
+#def add_candidate(name):
+    try:
+        admin = get_admin()
+
+        tx_hash = contract.functions.addCandidate(name).transact({
+            "from": admin
+        })
+
+        receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+        return {
+            "success": receipt.status == 1,
+            "txHash": receipt.transactionHash.hex()
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
