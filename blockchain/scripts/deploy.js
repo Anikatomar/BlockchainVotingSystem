@@ -1,25 +1,44 @@
+
 const hre = require("hardhat");
 
 async function main() {
+    const signers = await hre.ethers.getSigners();
 
-    // Create a contract factory from Voting.sol
+    console.log("Number of accounts found:", signers.length);
+
+    signers.forEach((signer, index) => {
+        console.log(`Account ${index}:`, signer.address);
+    });
+
+    if (signers.length < 4) {
+        throw new Error(
+            "Ganache must provide at least 4 accounts: 1 admin and 3 officials."
+        );
+    }
+
+    const [admin, official1, official2, official3] = signers;
+
+    const officialAddresses = [
+        await official1.getAddress(),
+        await official2.getAddress(),
+        await official3.getAddress()
+    ];
+
+    console.log("\nAdmin:", await admin.getAddress());
+    console.log("Officials:", officialAddresses);
+
     const Voting = await hre.ethers.getContractFactory("Voting");
 
-    console.log("Deploying Voting Contract...");
+    const voting = await Voting.deploy(officialAddresses);
 
-    // Deploy the contract
-    const voting = await Voting.deploy("IEEE Student Council Election");
+    console.log("\nDeploying Voting Contract...");
 
-    // Wait until deployment is complete
     await voting.waitForDeployment();
 
-    // Print the deployed contract address
     console.log("Contract deployed successfully!");
     console.log("Contract Address:", await voting.getAddress());
-
 }
 
-// Execute the deployment
 main().catch((error) => {
     console.error(error);
     process.exitCode = 1;

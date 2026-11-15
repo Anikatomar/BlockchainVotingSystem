@@ -1,188 +1,155 @@
+
 import NavigationBar from "../components/layout/Navbar";
-import { FaTrophy } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import { Card, Table } from "react-bootstrap";
+import { Link } from "react-router-dom";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Badge,
+  Alert,
+  Spinner
+} from "react-bootstrap";
+import { FaTrophy } from "react-icons/fa";
+
 function Results() {
-  const [winner, setWinner] = useState(null);
+  const [elections, setElections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-const [summary, setSummary] = useState(null);
-
-const [candidates, setCandidates] = useState([]);
-async function loadResults() {
-
+  async function loadElections() {
     try {
+      setLoading(true);
+      setError("");
 
-        const winnerResponse = await fetch(
-            "http://127.0.0.1:5000/winner"
-        );
+      const response = await fetch(
+        "http://127.0.0.1:5000/elections"
+      );
 
-        const summaryResponse = await fetch(
-            "http://127.0.0.1:5000/summary"
-        );
+      if (!response.ok) {
+        throw new Error("Unable to load elections");
+      }
 
-        const candidateResponse = await fetch(
-            "http://127.0.0.1:5000/getCandidates"
-        );
+      const data = await response.json();
 
-        setWinner(await winnerResponse.json());
-
-        setSummary(await summaryResponse.json());
-
-        setCandidates(await candidateResponse.json());
-
+      setElections(
+        Array.isArray(data) ? data : data.elections || []
+      );
+    } catch (error) {
+      console.error(error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    catch(error){
+  useEffect(() => {
+    loadElections();
+  }, []);
 
-        console.log(error);
-
+  function getStatusColor(status) {
+    switch (String(status).toUpperCase()) {
+      case "ACTIVE":
+        return "success";
+      case "ENDED":
+        return "secondary";
+      case "CANCELLED":
+        return "danger";
+      default:
+        return "warning";
     }
+  }
 
-}
-useEffect(() => {
-
-    loadResults();
-
-}, []);
   return (
     <>
       <NavigationBar />
 
-      <div className="container mt-5">
+      <Container className="mt-5 mb-5">
+        <Row className="align-items-center mb-4">
+          <Col>
+            <h1>
+              <FaTrophy className="me-2 text-warning" />
+              Election Results
+            </h1>
 
-        <h1>
-  <FaTrophy className="me-2" color="#ffc107" />
-  Results
-</h1>
+            <p className="text-muted">
+              Select an election to view its candidate-wise
+              results and winner.
+            </p>
+          </Col>
+
+          <Col xs="auto">
+            <Button
+              variant="outline-primary"
+              onClick={loadElections}
+            >
+              Refresh
+            </Button>
+          </Col>
+        </Row>
 
         <hr />
 
-        <Card className="shadow p-4">
+        {error && (
+          <Alert variant="danger">
+            {error}
+          </Alert>
+        )}
 
-    <h2>🏆 Winner</h2>
+        {loading ? (
+          <div className="text-center mt-5">
+            <Spinner animation="border" />
+            <p className="mt-2">Loading elections...</p>
+          </div>
+        ) : elections.length === 0 ? (
+          <Alert variant="info">
+            No elections are available yet.
+          </Alert>
+        ) : (
+          <Row className="g-4">
+            {elections.map((election) => (
+              <Col md={6} lg={4} key={election.id}>
+                <Card className="shadow-sm h-100">
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-start">
+                      <Card.Title>
+                        {election.name}
+                      </Card.Title>
 
-    {
-    winner?.success === false ?
+                      <Badge bg={getStatusColor(election.state ?? election.status)}>
+                        {election.state ?? election.status ?? "UNKNOWN"}
+                      </Badge>
+                    </div>
 
-    <>
+                    <hr />
 
-        <h2 className="text-warning">
+                    <p>
+                      <strong>Election ID:</strong>{" "}
+                      {election.id}
+                    </p>
 
-            🗳 Election In Progress
+                    <p>
+                      <strong>Total Votes:</strong>{" "}
+                      {election.totalVotes ?? 0}
+                    </p>
 
-        </h2>
-
-        <p>
-
-            Winner will be declared after the election ends.
-
-        </p>
-
-    </>
-
-    :
-
-    <>
-
-        <h1 className="text-success">
-
-            {winner?.name}
-
-        </h1>
-
-        <h5>
-
-            Votes : {winner?.votes}
-
-        </h5>
-
-    </>
-
-}
-
-    <hr />
-
-    <p>
-
-        Total Votes :
-
-        {summary?.totalVotes ?? 0}
-
-    </p>
-
-</Card>
-
-        <Card className="shadow mt-4 p-4">
-
-    <h3>Final Results</h3>
-
-    <Table striped bordered hover className="mt-3">
-
-        <thead>
-
-            <tr>
-
-                <th>Rank</th>
-
-                <th>Candidate</th>
-
-                <th>Votes</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-        {
-
-            [...candidates]
-
-            .sort((a,b)=>b.votes-a.votes)
-
-            .map((candidate,index)=>(
-
-                <tr key={candidate.id}>
-
-                    <td>
-
-                        {
-
-                            index===0
-
-                            ? "🥇"
-
-                            : index===1
-
-                            ? "🥈"
-
-                            : index===2
-
-                            ? "🥉"
-
-                            : index+1
-
-                        }
-
-                    </td>
-
-                    <td>{candidate.name}</td>
-
-                    <td>{candidate.votes}</td>
-
-                </tr>
-
-            ))
-
-        }
-
-        </tbody>
-
-    </Table>
-
-</Card>
-
-      </div>
+                    <Button
+                      as={Link}
+                      to={`/election/${election.id}/results`}
+                      variant="primary"
+                      className="w-100 mt-2"
+                    >
+                      View Results
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Container>
     </>
   );
 }

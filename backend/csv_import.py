@@ -86,23 +86,21 @@ def import_voters(csv_file):
             # -----------------------------
 
             cursor.execute("""
-                INSERT INTO voters
-                (
-                    aadhaar,
-                    voter_id,
-                    name,
-                    age,
-                    eligible,
-                    verified
-                )
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
+            INSERT INTO voters
+            (
                 aadhaar,
                 voter_id,
                 name,
                 age,
-                1,
-                1
+                eligible
+            )
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            aadhaar,
+            voter_id,
+            name,
+            age,
+            1
             ))
 
             imported += 1
